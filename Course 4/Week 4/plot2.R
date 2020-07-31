@@ -1,0 +1,7 @@
+library(dplyr)
+NEI <- readRDS("summarySCC_PM25.rds")
+a<-subset(NEI,NEI$fips=="24510")
+z<-a %>%group_by(year) %>% summarise(Total_Emissions=sum(Emissions))
+png(file="plot2.png")
+plot(z$year,z$Total_Emissions,ylab="Total Emission",xlab="year",main="Total Emissions from 1999 - 2008 in Baltimore City, Maryland",type="o",col="red")
+dev.off()

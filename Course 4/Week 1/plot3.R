@@ -1,0 +1,18 @@
+library(data.table)
+data<-data.table::fread("household_power_consumption.txt",header=TRUE,na.strings = "?",sep=";")
+data$Date<-as.Date(data$Date,"%d/%m/%Y")
+data1<-subset(data,Date>=as.Date("2007-2-1") & Date<=as.Date("2007-2-2"))
+dateTime<-paste(data1$Date,data1$Time)
+dateTime <- setNames(dateTime, "DateTime")
+data1<- cbind(dateTime, data1)
+data1$dateTime <- as.POSIXct(dateTime)
+data1=subset(data1,select=-c(2,3))
+png(file="plot3.png",width=480,height=480)
+with(data1,{
+  plot(dateTime,Sub_metering_1,col="black",type="l",ylab="Energy sub metering",xlab="")
+  lines(dateTime,Sub_metering_2,col="red")
+  lines(dateTime,Sub_metering_3,col="blue")
+})
+legend("topright", col=c("black", "red", "blue"), lwd=c(1,1,1), 
+       c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"))
+dev.off()

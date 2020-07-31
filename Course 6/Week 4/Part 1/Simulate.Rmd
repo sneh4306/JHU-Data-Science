@@ -1,0 +1,61 @@
+---
+title: "Simulation Exercise"
+author: "Sneh Bindesh Chitalia"
+date: "10/06/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Overview:-  
+Few basic analysis will be carried out hwich includes calculation of sample mean and variances and comparing them with their respective theoretical values. Furthermore, it will be shown that the distribution taken into consideration is normal distribution.  
+
+## Simulation:-  
+The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. Set lambda = 0.2 for all of the simulations. A seed is set, so that the simulation can be repeated by someone else.Thousand simulations are carried out.
+```{r}
+set.seed(800)
+n<-1000
+samplesize<-40
+lambda<-0.2
+mns<-vector()
+for(i in 1:n){
+  mns<-c(mns,mean(rexp(samplesize,rate=lambda)))
+}
+tmean<-1/lambda
+smean<-mean(mns)
+hist(mns,col="green",main="Histogram of means of samples",xlab="Sample Means")
+abline(v=tmean,col="red",lwd=2)
+```
+
+## Comparison between Sample Mean and Theoretical Mean
+```{r}
+
+tmean-smean
+```
+Thus, we can see that the difference between the theoretical mean and sample mean is very small.
+
+## Comparison between Sample Variance and Theoretical Variance
+```{r}
+tvariance<-(1/lambda)^2/samplesize
+svariance <- var(mns)
+tvariance-svariance
+```
+Thus, we can see that the difference between theoretical variance and sample variance is very small
+
+## Show that the disribution is normal
+```{r}
+hist(mns,  xlab="Mean of each trial", ylab = "Density", main="Distribution of sample means", breaks=samplesize, prob=TRUE);lines(density(mns));abline(v = 1/lambda, col = "red")
+```
+The next step is to proof if the distribution is normally distributed, with the confidence interval In this situation, we can compare the confidence interval between theorical and sample. If they have a small difference, that means the means, variance and also distribution tends to be normally distributed
+
+# Compute CI theoretical
+```{r}
+tsd<- (1/lambda)/sqrt(samplesize);ssd<-sd(mns);tmean + c(-1,1)*1.96 * tsd/samplesize
+```
+# Compute CI actual
+```{r}
+smean +c(-1,1)*1.96*ssd/sqrt(samplesize)
+```
+From the result, we can see that the distribution is not exactly normally distributied. However, with larger sample size then according to central limit theorem, the data is more likely to be normally distributed.

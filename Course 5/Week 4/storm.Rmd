@@ -1,0 +1,77 @@
+---
+title: "Effects of weather events on health and economic factors"
+output:
+  pdf_document: default
+  html_document:
+    keep_md: yes
+---
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE,cache = TRUE)
+```
+## Synopsis:
+1. Data is Read.  
+2. For population health, two variables are considered viz Fatalities, Injuries, and another dataframe is generated which calculates the sum of both these factors according to each event.  
+3. This dataframe is sorted in descending order of sum of fatalities and injuries.  
+4. scatter plot is plotted for only the first 10 rows of this dataframe showing the impact of events on population health.  
+5. For economic consequences, 2 variables namely Property damage, Crop Damage are considered.  
+6. Propdmgexp and Cropdmgexp are variable which represent alpha notations for property damage and crop damage.For instance: H or h means multiply the number by 100,K or k means multiply the number by 1000,etc.  
+7. Thus the above calculations are performed and a dataframe "damage" is created which has 3 variables namely Event, property damage and crop damage.  
+8. Dataframe is arranged in descending order of the sum of property damage and crop damage.   
+9. A scatterplot for only the first 10 rows is plotted which represent the events which that have the greatest economic consquences.  
+
+## Data Processing
+### Impact on population health
+1. Read the data.
+```{r}
+data<-read.csv(bzfile("repdata-data-StormData.csv.bz2"))
+```
+2. group data by events and calculate sum of fatalities for each event and injuries for each event.
+```{r}
+library(dplyr)
+library(ggplot2)
+databyevent<-data %>% group_by(EVTYPE) %>% summarise(Tfatal=sum(FATALITIES),tinjured=sum(INJURIES))
+```
+3. Calculte the total of injuries and fatalities for each event and arrange in descending order.
+```{r}
+databyevent$health<-databyevent$Tfatal+databyevent$tinjured
+databyevent<-databyevent %>% arrange(desc(health))
+```
+### Impact on Economic Factors
+1. Tables for property damage and crop damage
+```{r}
+table(data$PROPDMGEXP)
+ table(data$CROPDMGEXP)
+```
+2. As we can see the aplha notations, we must convert them into numeric value
+```{r}
+stormdata<-data %>% select(EVTYPE,PROPDMGEXP,CROPDMGEXP,PROPDMG,CROPDMG)
+stormdata$PROPDMGCALC [stormdata$PROPDMG==0] <- 0  
+stormdata$CROPDMGCALC [stormdata$CROPDMG==0] <- 0 
+stormdata$PROPDMGCALC [stormdata$PROPDMGEXP=="H"|stormdata$PROPDMGEXP=="h"]<-stormdata$PROPDMG[stormdata$PROPDMGEXP=="H"|stormdata$PROPDMGEXP=="h"]*100
+stormdata$CROPDMGCALC [stormdata$CROPDMGEXP=="H"|stormdata$CROPDMGEXP=="h"]<-stormdata$CROPDMG[stormdata$CROPDMGEXP=="H"|stormdata$CROPDMGEXP=="h"]*100
+stormdata$PROPDMGCALC [stormdata$PROPDMGEXP=="K"|stormdata$PROPDMGEXP=="k"]<-stormdata$PROPDMG[stormdata$PROPDMGEXP=="K"|stormdata$PROPDMGEXP=="k"]*1000
+stormdata$CROPDMGCALC [stormdata$CROPDMGEXP=="K"|stormdata$CROPDMGEXP=="k"]<-stormdata$CROPDMG[stormdata$CROPDMGEXP=="K"|stormdata$CROPDMGEXP=="k"]*1000
+stormdata$PROPDMGCALC [stormdata$PROPDMGEXP=="M"|stormdata$PROPDMGEXP=="m"]<-stormdata$PROPDMG[stormdata$PROPDMGEXP=="M"|stormdata$PROPDMGEXP=="m"]*1000000
+stormdata$CROPDMGCALC [stormdata$CROPDMGEXP=="M"|stormdata$CROPDMGEXP=="m"]<-stormdata$CROPDMG[stormdata$CROPDMGEXP=="M"|stormdata$CROPDMGEXP=="m"]*1000000
+stormdata$PROPDMGCALC [stormdata$PROPDMGEXP=="B"|stormdata$PROPDMGEXP=="b"]<-stormdata$PROPDMG[stormdata$PROPDMGEXP=="B"|stormdata$PROPDMGEXP=="b"]*1000000000
+stormdata$CROPDMGCALC [stormdata$CROPDMGEXP=="B"|stormdata$CROPDMGEXP=="b"]<-stormdata$CROPDMG[stormdata$CROPDMGEXP=="B"|stormdata$CROPDMGEXP=="b"]*1000000000
+```
+3. Group according to event and arrange the dataframe in descending order with respect to sum of the new variables calculated(PROPDMGCALC,CROPDMGCALC).
+```{r}
+damage<- aggregate(cbind(PROPDMGCALC,CROPDMGCALC)~EVTYPE, data = stormdata, sum, na.rm=TRUE)
+damage<- arrange(damage, desc(PROPDMGCALC+CROPDMGCALC))
+head(damage)
+```
+## Results
+
+1. Population Health (scatterplot).
+```{r}
+g<-ggplot(databyevent[c(1:10),],aes(Tfatal,tinjured,col=EVTYPE))+geom_point()+labs(x="Fatlities",y="Injured")+ggtitle("Impact of events on Population Health")
+update_labels(g,list(colour="Event Type"))
+```
+
+2. Economic Consequences (scatterplot).
+```{r}
+k<-ggplot(damage[1:10,],aes(PROPDMGCALC,CROPDMGCALC,col=EVTYPE))+geom_point()+labs(x="Property Damage",y="Crop Damage")+ggtitle("Impact of events on Economic Damage")
+update_labels(k,list(colour="Event Type"))
+```

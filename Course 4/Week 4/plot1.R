@@ -1,0 +1,6 @@
+library(dplyr)
+NEI <- readRDS("summarySCC_PM25.rds")
+s<-NEI %>%group_by(year) %>% summarise(Total_Emissions=sum(Emissions))
+png(file="plot1.png")
+plot(s$year,s$Total_Emissions,ylab="Total Emission",xlab="year",main="Total Emissions from 1999 - 2008",type="o",col="red")
+dev.off()

@@ -1,0 +1,35 @@
+---
+title: "Shiny Gadgets Practice"
+author: "Sneh Bindesh Chitalia"
+date: "18/06/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r cars, echo = TRUE}
+library(shiny)
+library(miniUI)
+picktrees<-function(){
+  ui<-miniPage(
+    gadgetTitleBar("Brushed poits"),
+    miniContentPanel(
+      plotOutput("plot",height = "100%",brush="brush")
+    )
+  )
+  server<-function(input,output,session){
+    output$plot<-renderPlot({
+      plot(trees$Girth,trees$Volume,main="Trees!!",xlab="Girth",ylab="Volume")
+    })
+    observeEvent(input$done,{
+      stopApp(brushedPoints(trees,input$brush,xvar="Girth",yvar="Volume"))
+    })
+  }
+  runGadget(ui,server)
+}
+
+```
+
+

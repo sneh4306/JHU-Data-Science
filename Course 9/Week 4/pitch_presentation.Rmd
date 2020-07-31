@@ -1,0 +1,98 @@
+---
+title: "Interactive charts using Shiny"
+author: "Sneh Bindesh Chitalia"
+date: "20/06/2020"
+output: slidy_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Detail about the charts
+
+mtcars dataset has been used for this shiny web application. The outcome is fixed which is Miles Per Gallon (mpg), whereas the x-axis variable can be changed, furthermore, the variables controlling color and size of each data point can also be changed. The web application is hosted on https://csneh4.shinyapps.io/Interactive_Prediction/ .  
+The code for this is available on https://github.com/sneh4306/Shiny-Web-Application
+
+## About the Data
+
+```{r echo=TRUE}
+head(mtcars)
+```
+
+## UI code
+
+```{r, echo = TRUE, eval=FALSE}
+library(shiny)
+
+# Define UI for application that draws a histogram
+shinyUI(fluidPage(
+
+    # Application title
+    titlePanel("Cars Dataset"),
+
+    # Sidebar with a slider input for number of bins
+    sidebarLayout(
+        sidebarPanel(
+        selectInput("xvar","Variable for X-axis",
+                    choices=list("Cylinder"="cyl","Transmission"="am","Gears"="gear"),selected = "cyl"),
+        selectInput("color","Variable for color",
+                    choices=list("Carburetors"="carb","Engine Type"="vs"),selected="carb"),
+        selectInput("size","Variable for size",
+                    choices=list("Horsepower"="hp","Weight"="wt"),selected = "hp"),
+        submitButton("Submit")
+        ),
+    
+    
+    
+
+        # Show a plot of the generated distribution
+        mainPanel(
+            h3(textOutput("Title")),
+            plotOutput("plot")
+        )
+    )
+    ))
+
+
+```
+
+## Server Code
+
+```{r,echo=TRUE,eval=FALSE}
+library(shiny)
+library(ggplot2)
+
+
+# Define server logic required to draw a histogram
+shinyServer(function(input, output) {
+
+
+    mtcars$vs<-factor(mtcars$vs,labels = c("V-shaped","Straight"))
+    mtcars$carb<-as.factor(mtcars$carb)
+    text<-reactive({
+        paste("mpg vs",input$xvar)
+    })
+    output$Title<-renderText({
+        text()
+        })
+    
+    p<-reactive({
+        ax<-list(
+            title=input$xvar
+        )
+        al<-list(
+            title=input$color
+        )
+        
+        g<-ggplot(mtcars,aes_string(y="mpg",x=input$xvar,col=input$color))+geom_point(aes_string(size=input$size))
+        g
+        })
+   
+    output$plot<-renderPlot({
+        p()
+         })
+})
+
+```
+

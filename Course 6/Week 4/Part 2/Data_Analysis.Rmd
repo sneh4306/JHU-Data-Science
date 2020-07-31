@@ -1,0 +1,89 @@
+---
+title: "Basic Differential Data Analysis"
+author: "Sneh Bindesh Chitalia"
+date: "11/06/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load the dataset
+```{r}
+library(datasets)
+data("ToothGrowth")
+head(ToothGrowth)
+```
+
+## Basic Exploratory Data Analysis
+```{r}
+library(ggplot2)
+#Plot 1 (dose vs len)
+ToothGrowth$dose<-as.factor(ToothGrowth$dose)
+g<-ggplot(ToothGrowth,aes(x=dose,y=len,fill=dose))+geom_boxplot()+ggtitle("Comparison between dosage and tooth length")+xlab("dose in mg")+ylab("tooth length")
+print(g)
+#Plot 2 (supp vs len)
+k<-ggplot(ToothGrowth,aes(x=supp,y=len,fill=supp))+geom_boxplot()+ggtitle("Comparison of delivery method with tooth length")+xlab("delivery method")+ylab("tooth length")
+print(k)
+```
+
+## Summary  
+Check for any NA or Null or any type of missing values
+```{r}
+sum(!complete.cases(ToothGrowth))
+```
+
+Thus, there are no missing values in the data.  
+Further exploring the data
+```{r}
+summary(ToothGrowth)
+```
+
+This gives us an overview of the data
+```{r}
+str(ToothGrowth)
+```
+
+This gives us information about data type of each variable.  
+  
+## Hypothesis Testing  
+We carry out hypothesis testing on whether delivery mode has any impact on teeth length.  
+The null hypothesis is:  
+# H0: The delivery mode for Vitamin C does not have any impact on tooth length
+```{r}
+dosage<-ToothGrowth$dose
+supp<-ToothGrowth$supp
+len<-ToothGrowth$len
+t.test(len[supp=="OJ"],len[supp=="VC"],paired=FALSE)
+```
+
+Since the p-value > 0.05, we fail to reject the null hypothesis.  
+However, the confidence interval contains 0 which indicates that the test is not significant.  
+  
+# H0: The dosage in mg does not have any impact on tooth length
+```{r}
+# compare between dosage of 0.5 mg and 1 mg
+t.test(len[dosage==0.5],len[dosage==1],paired = FALSE)
+```
+
+Since the p-value < 0.05, we can reject the null hypothesis.  
+Also, the confidence interval does not contain zero which indicates that the test is significant.
+```{r}
+# compare between dosage of 1 mg and 2 mg
+t.test(len[dosage==1],len[dosage==2],paired=FALSE)
+```
+
+Since the p-value < 0.05, we can reject the null hypothesis.  
+Also, the confidence interval does not contain zero which indicates that the test is significant.  
+Thus we can succesfully rule out null hypothesis.  
+  
+## Conclusions   
+1. The delivery method of Vitamin C does not impact the teeth growth.  
+2. The amount of dosage given to the guinea pigs impact the teeth growth.    
+  
+## Assumptions
+1. t-tests are considered.    
+2. These t-tests are considered to be unpaired.

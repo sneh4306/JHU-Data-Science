@@ -1,0 +1,23 @@
+---
+title: "The map of Seven Wonders of the world"
+author: "Sneh Bindesh Chitalia"
+date: "20/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Leaflet Map  
+The map of seven wonders of the world has been created with each circular marker indicating the location of one wonder.
+```{r}
+library(leaflet)
+df<-data.frame(
+  lat=c(40.431908,27.173891,30.328960,41.890251,-22.9510,20.6764,-13.163068),
+  lng=c(116.570374,78.042068,35.444832,12.492373,-43.2065,-88.5679,-72.545128),
+  name=c("The Great Wall of China","The Taj Mahal,India","Pedre,Jordan","The Colosseum in Rome, Italy","Christ the Redeemer statue, Rio de Janeiro, Brazil","Chichen Itza, Mexico","Machu Picchu, Peru "),
+  col=c("red","blue","green","yellow","purple","brown","black"))
+df %>% leaflet() %>% addTiles() %>% addCircleMarkers(popup = df$name,col=df$col) %>% addLegend(labels = df$name,colors = df$col)
+
+```

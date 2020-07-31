@@ -1,0 +1,157 @@
+---
+title: "Predictive Assignment"
+author: "Sneh Bindesh Chitalia"
+date: "19/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Background  
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants.  
+
+# Reding Dataset
+```{r}
+t<-read.csv("Activity_Recognition_train.csv")
+v<-read.csv("Activity_Recognition_test.csv")
+dim(t)
+dim(v)
+```
+
+# Cleaning the dataset  
+
+## Remove all columns with missing values
+```{r}
+t_data<-t[,colSums(is.na(t))==0]
+v_data<-v[,colSums(is.na(v))==0]
+dim(t_data)
+dim(v_data)
+```
+
+## Removing first seven variables from dataset since they do not have any impact on outcome
+```{r}
+t_data<-t_data[,-c(1:7)]
+v_data<-v_data[,-c(1:7)]
+dim(t_data)
+dim(v_data)
+```
+
+## Removing all those variab;es which have a Near Zero Variance (NZV)
+```{r}
+library(caret)
+NZV<-nearZeroVar(t_data)
+t_data<-t_data[,-NZV]
+dim(t_data)
+```
+
+# Preparing Dataset for Prediction  
+
+## Splitting data into train and test sets  
+```{r}
+set.seed(1234)
+in_train<-createDataPartition(t_data$classe,p=0.7,list=FALSE)
+train_data<-t_data[in_train,]
+test_data<-t_data[-in_train,]
+```
+
+## Plot   
+Correlation plot to see how closely all the variables are related, for this we use the corrplot function. The type is FPC which stands for First Principle Component.
+```{r}
+library(corrplot)
+c<-cor(train_data[,-53])
+corplot<-corrplot(c,method="color",type="lower",order="FPC",tl.col=rgb(0,0,0),tl.cex=0.9)
+```
+
+## Some of the variables are highly correlated  
+These variables are:  
+```{r echo=FALSE}
+names(train_data)[findCorrelation(c,cutoff = 0.75)]
+```
+
+# Model Building  
+Since we want to predict a factor variable (classe), we can use such models that can be best used to predict factor variables.  
+We will use three models to see which one among those is the best:-  
+1. Decision Tree  
+2. Random Forest  
+3. Generalized Boosted Model  
+
+## Decision Tree
+```{r}
+set.seed(12345)
+library(rpart)
+library(rattle)
+model_dt<-rpart(classe~.,data=train_data,method = "class")
+fancyRpartPlot(model_dt)
+```
+
+This model is then used to predict values of test data and find the accuracy and out of sample error
+```{r}
+pred_dt<-predict(model_dt,newdata=test_data,type="class")
+cmdt<-confusionMatrix(pred_dt,factor(test_data$classe))
+cmdt
+```
+
+### Accuracy and out of sample error of Decision Tree
+```{r}
+paste("Accuracy for is",round(cmdt$overal['Accuracy'],3)*100,"%")
+paste("Out of sample Error is ",round((1-cmdt$overal['Accuracy']),3))
+```
+
+## Random Forest  
+3-Cross Validation has been used for bias variance tradeoff.
+```{r}
+set.seed(12345)
+model_rf<-train(classe~.,data=train_data,method="rf",trControl= trainControl(method="cv",number=3,verboseIter = FALSE))
+model_rf$finalModel
+```
+
+### Plotting the model
+```{r}
+plot(model_rf)
+```
+
+This model is then used to predict values of test data and find the accuracy and out of sample error
+```{r}
+pred_rf<-predict(model_rf,newdata=test_data)
+cmrf<-confusionMatrix(pred_rf,factor(test_data$classe))
+cmrf
+```
+
+### Accuracy and out of sample error of Random Forest
+```{r}
+paste("Accuracy for is ",round(cmrf$overal['Accuracy'],3)*100,"%")
+paste("Out of sample Error is ",round((1-cmrf$overal['Accuracy']),3))
+```
+
+## Generalized Boosting Model
+```{r}
+set.seed(12345)
+control<-trainControl(method = "repeatedcv", number = 5, repeats = 1)
+model_gbm<-train(classe~.,data=train_data,method="gbm",trControl=control,verbose=FALSE)
+model_gbm$finalModel
+print(model_gbm)
+```
+
+This model is then used to predict values of test data and find the accuracy and out of sample error
+```{r}
+pred_gbm<-predict(model_gbm,newdata=test_data)
+cmgbm<-confusionMatrix(pred_gbm,factor(test_data$classe))
+cmgbm
+```
+
+### Accuracy and out of sample error of Generalized Boosting Model
+```{r}
+paste("Accuracy for is ",round(cmgbm$overal['Accuracy'],3)*100,"%")
+paste("Out of sample Error is ",round((1-cmgbm$overal['Accuracy']),3))
+```
+
+Thus, after comparison of all the models, we can see that, Random Forest has the highest Accuracy and lowest out of sample error.  
+
+## Applying Random Forest on validation set
+```{r}
+res<-predict(model_rf,newdata=v_data)
+res
+```

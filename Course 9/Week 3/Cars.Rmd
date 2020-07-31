@@ -1,0 +1,27 @@
+---
+title: "Week 3 Assignment"
+author: "Sneh Bindesh Chitalia"
+date: "20/06/2020"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Cars Dataset  
+
+- Color of each datapoint is according to the number of cylinders in each car.  
+- Size of each datapoint is according to the horsepower of each car
+```{r ,echo=FALSE,warning=FALSE}
+suppressPackageStartupMessages(library(plotly))
+ax<-list(
+  title="Weight"
+)
+ay<-list(
+  title="Miles Per Gallon"
+)
+plot_ly(mtcars,x=~wt,y=~mpg,color = ~factor(cyl),size=~hp,type = "scatter",mode='markers')%>% layout(xaxis=ax,yaxis=ay)
+```
+
+## Thanks
